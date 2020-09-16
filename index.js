@@ -121,5 +121,3 @@ var onKeyDown = function (event) {
 };
 // イベント追加
 window.addEventListener('keydown', onKeyDown);
-// イベント追加
-window.removeEventListener('keydown', onKeyDown);
