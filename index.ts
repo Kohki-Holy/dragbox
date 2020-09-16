@@ -131,9 +131,6 @@ const onKeyDown = (event: KeyboardEvent) => {
   } else if (event.ctrlKey && event.key === 'y') {
     redo()
   }
-
-  // イベント除去
-  window.removeEventListener('keydown', onKeyDown)
 }
 
 // イベント追加

@@ -118,8 +118,8 @@ var onKeyDown = function (event) {
     else if (event.ctrlKey && event.key === 'y') {
         redo();
     }
-    // イベント除去
-    window.removeEventListener('keydown', onKeyDown);
 };
 // イベント追加
 window.addEventListener('keydown', onKeyDown);
+// イベント追加
+window.removeEventListener('keydown', onKeyDown);
