@@ -13,12 +13,13 @@ var __assign = (this && this.__assign) || function () {
 var maxLogSize = 10;
 var dragableArea = document.querySelector('.dragableArea');
 var dragableBox = document.querySelector('.dragableBox');
+// 操作履歴用配列
 var corodLog = [];
-dragableBox.addEventListener('mousedown', function (event) {
+var onMouseDown = function (event) {
     var target = event.currentTarget;
     var domRectBox = target.getBoundingClientRect();
     // target要素のborder-widthを取得
-    var borderWidth = parseInt(getComputedStyle(target).getPropertyValue("border-width"));
+    var borderWidth = parseInt(getComputedStyle(target).getPropertyValue('border-width'));
     // cssの初期化
     dragableBox.setAttribute('style', "left:" + (domRectBox.left - borderWidth) + "px; right:auto;transform:none;");
     // 初期座標
@@ -47,15 +48,18 @@ dragableBox.addEventListener('mousedown', function (event) {
             target.style.right = 'auto';
         }
     };
+    // mouseup コールバック関数
     var onMouseUp = function (event) {
         var target = event.currentTarget;
         for (var i = 0, len = corodLog.length; i < len; i++) {
             if (corodLog[i].current) {
                 corodLog[i] = __assign(__assign({}, corodLog[i]), { current: false });
+                // undoで操作を戻していたらそこ以前の動作を上書き削除
                 corodLog.splice(0, i);
                 break;
             }
         }
+        // 座標記録用オブジェクト
         var corod = {
             left: target.style.left,
             right: target.style.right,
@@ -67,7 +71,6 @@ dragableBox.addEventListener('mousedown', function (event) {
         if (corodLog.length > maxLogSize) {
             corodLog.pop();
         }
-        console.log(corodLog);
         // イベント除去
         target.removeEventListener('mousemove', onMouseMove);
         dragableBox.removeEventListener('mouseup', onMouseUp);
@@ -75,13 +78,18 @@ dragableBox.addEventListener('mousedown', function (event) {
     // イベント追加
     target.addEventListener('mousemove', onMouseMove);
     dragableBox.addEventListener('mouseup', onMouseUp);
-});
-window.addEventListener('keydown', function (event) {
+    // イベント除去
+    dragableBox.addEventListener('mousedown', onMouseDown);
+};
+// イベント追加
+dragableBox.addEventListener('mousedown', onMouseDown);
+var onKeyDown = function (event) {
     // 元に戻す
     var undo = function () {
         for (var i = 0, len = corodLog.length; i < len; i++) {
             if (corodLog[i].current && i + 1 < len) {
                 corodLog[i] = __assign(__assign({}, corodLog[i]), { current: false });
+                // 座標更新処理
                 dragableBox.style.left = corodLog[i + 1].left;
                 dragableBox.style.right = corodLog[i + 1].right;
                 corodLog[i + 1] = __assign(__assign({}, corodLog[i + 1]), { current: true });
@@ -94,6 +102,7 @@ window.addEventListener('keydown', function (event) {
         for (var i = 0, len = corodLog.length; i < len; i++) {
             if (corodLog[i].current && i - 1 >= 0) {
                 corodLog[i] = __assign(__assign({}, corodLog[i]), { current: false });
+                // 座標更新処理
                 dragableBox.style.left = corodLog[i - 1].left;
                 dragableBox.style.right = corodLog[i - 1].right;
                 corodLog[i - 1] = __assign(__assign({}, corodLog[i - 1]), { current: true });
@@ -109,4 +118,8 @@ window.addEventListener('keydown', function (event) {
     else if (event.ctrlKey && event.key === 'y') {
         redo();
     }
-});
+    // イベント除去
+    window.removeEventListener('keydown', onKeyDown);
+};
+// イベント追加
+window.addEventListener('keydown', onKeyDown);
