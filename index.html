@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #fff;
+    }
+    div.dragableArea {
+      position: relative;
+      height: 100vh;
+      border: 5px solid #c00;
+      overflow: hidden;
+    }
+    div.dragableBox {
+      border: 5px solid #333;
+      background-color: #eee;
+      position: absolute;
+      height: 100%;
+      width: 80%;
+      left: 50%;
+      right: 50%;
+      transform: translateX(-50%);
+    }
+  </style>
+  <title>マウスドラッグで動かすヤツ</title>
+</head>
+<body>
+  <div class="dragableArea">
+    <div class="dragableBox"></div>
+  </div>
+  <script src="./index.js"></script>
+</body>
+</html>
