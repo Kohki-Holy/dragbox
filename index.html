@@ -12,28 +12,28 @@
     body {
       background-color: #fff;
     }
-    div.dragableArea {
+    div.draggableArea {
       position: relative;
+      margin: 0 auto;
+      width: 80%;
       height: 100vh;
       border: 5px solid #c00;
       overflow: hidden;
     }
-    div.dragableBox {
+    div.draggableBox {
       border: 5px solid #333;
       background-color: #eee;
       position: absolute;
-      height: 100%;
-      width: 80%;
-      left: 50%;
-      right: 50%;
-      transform: translateX(-50%);
+      height: 100px;
+      width: 100px;
+      left: 0;
     }
   </style>
   <title>マウスドラッグで動かすヤツ</title>
 </head>
 <body>
-  <div class="dragableArea">
-    <div class="dragableBox"></div>
+  <div class="draggableArea">
+    <div class="draggableBox"></div>
   </div>
   <script src="./index.js"></script>
 </body>

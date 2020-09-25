@@ -1,137 +1,134 @@
 
-type Corod = {
+type HistoryType = {
   left: string
-  right: string
+  top: string
   current: Boolean
 }
 
 // 履歴の保存数
-const maxLogSize = 10
+const maxHistorySize = 10
 
-const dragableArea = document.querySelector('.dragableArea') as HTMLElement
+const draggableArea = document.querySelector('.draggableArea') as HTMLElement
 
-const dragableBox = document.querySelector('.dragableBox') as HTMLElement
+const draggableBox = document.querySelector('.draggableBox') as HTMLElement
 
 // 操作履歴用配列
-const corodLog: Array<Corod> = []
+const histories: Array<HistoryType> = [
+  {
+    left: '0px',
+    top: '0px',
+    current: true,
+  },
+]
 
 const onMouseDown = (event: MouseEvent) => {
-  const target = event.currentTarget as HTMLElement
-  const domRectBox = target.getBoundingClientRect()
   // target要素のborder-widthを取得
-  const borderWidth = parseInt(
-    getComputedStyle(target).getPropertyValue('border-width')
-  )
-
-  // cssの初期化
-  dragableBox.setAttribute(
-    'style',
-    `left:${domRectBox.left - borderWidth}px; right:auto;transform:none;`
-  )
+  const borderWidth = draggableBox.offsetWidth - draggableBox.clientWidth
+  const borderHeight = draggableBox.offsetHeight - draggableBox.clientHeight
 
   // 初期座標
-  const initialX = event.offsetX
+  const initialX = event.pageX - draggableBox.offsetLeft
+  const initialY = event.pageY - draggableBox.offsetTop
 
   // mousemove コールバック関数
   const onMouseMove = (event: MouseEvent) => {
-    const target = event.currentTarget as HTMLElement
-    const domRectArea = dragableArea.getBoundingClientRect()
-    const domRectBox = target.getBoundingClientRect()
-    // position 最大値
-    const max = domRectArea.width - domRectBox.width - borderWidth * 2
-    // 初期座標と現在座標との差分
-    const diff = event.offsetX - initialX
-    // 稼働後 position
-    const left = domRectBox.left + diff
+    const domRectArea = draggableArea.getBoundingClientRect()
+    const domRectBox = draggableBox.getBoundingClientRect()
 
-    // 稼働エリア制御
-    if (left <= 0) {
-      target.style.left = '0'
-    } else if (left >= max) {
-      target.style.left = 'auto'
-      target.style.right = '0'
+    // position 最大値
+    const positionLeftMax = domRectArea.width - domRectBox.width - borderWidth
+    const positionTopMax =
+      domRectArea.height - domRectBox.height - borderHeight
+
+    // 稼働後 position left
+    const draggedPositionLeft = event.pageX - initialX
+    const draggedPositionTop = event.pageY - initialY
+
+    // 上下稼働エリア制御
+    if (draggedPositionTop <= 0) {
+      draggableBox.style.top = '0'
+    } else if (draggedPositionTop >= positionTopMax) {
+      draggableBox.style.top = `${positionTopMax}px`
     } else {
-      target.style.left = `${left}px`
-      target.style.right = 'auto'
+      draggableBox.style.top = `${draggedPositionTop}px`
+    }
+
+    // 左右稼働エリア制御
+    if (draggedPositionLeft <= 0) {
+      draggableBox.style.left = '0'
+    } else if (draggedPositionLeft >= positionLeftMax) {
+      draggableBox.style.left = `${positionLeftMax}px`
+    } else {
+      draggableBox.style.left = `${draggedPositionLeft}px`
     }
   }
 
   // mouseup コールバック関数
-  const onMouseUp = (event: MouseEvent) => {
-    const target = event.currentTarget as HTMLElement
-    for (let i = 0, len = corodLog.length; i < len; i++) {
-      if (corodLog[i].current) {
-        corodLog[i] = { ...corodLog[i], current: false }
-        // undoで操作を戻していたらそこ以前の動作を上書き削除
-        corodLog.splice(0, i)
-        break
-      }
+  const onMouseUp = () => {
+    // 履歴配列の現在参照している座標のindexを取得
+    // @ts-ignore
+    const index = histories.findIndex((history) => history.current)
+    if (histories[index].current) {
+      histories[index] = { ...histories[index], current: false }
+      // undo で操作を戻していたらそこ以前の動作を上書き削除
+      histories.splice(0, index)
     }
     // 座標記録用オブジェクト
     const corod = {
-      left: target.style.left,
-      right: target.style.right,
+      left: draggableBox.style.left,
+      top: draggableBox.style.top,
       current: true,
     }
     // 先頭に追加
-    corodLog.unshift(corod)
+    histories.unshift(corod)
     // 履歴が一定個数以上で削除
-    if (corodLog.length > maxLogSize) {
-      corodLog.pop()
+    if (histories.length > maxHistorySize) {
+      histories.pop()
     }
-    // イベント除去
-    target.removeEventListener('mousemove', onMouseMove)
-    dragableBox.removeEventListener('mouseup', onMouseUp)
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
   }
 
-  // イベント追加
-  target.addEventListener('mousemove', onMouseMove)
-  dragableBox.addEventListener('mouseup', onMouseUp)
-
-  // イベント除去
-  dragableBox.addEventListener('mousedown', onMouseDown)
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
 }
 
-// イベント追加
-dragableBox.addEventListener('mousedown', onMouseDown)
+// イベントリスナー追加
+draggableBox.addEventListener('mousedown', onMouseDown)
 
 const onKeyDown = (event: KeyboardEvent) => {
-  // 元に戻す
-  const undo = () => {
-    for (let i = 0, len = corodLog.length; i < len; i++) {
-      if (corodLog[i].current && i + 1 < len) {
-        corodLog[i] = { ...corodLog[i], current: false }
-        // 座標更新処理
-        dragableBox.style.left = corodLog[i + 1].left
-        dragableBox.style.right = corodLog[i + 1].right
-        corodLog[i + 1] = { ...corodLog[i + 1], current: true }
-        break
+  const historyAction = (action: string) => {
+    // 変更先の配列 index を返す関数
+    const findAction = (): number => {
+      // findIndexが認識されないようなので（tsconfigの設定の影響と思われる）
+      // @ts-ignore
+      const index = histories.findIndex((history) => history.current)
+      histories[index].current = false
+      if (action === 'undo' && index + 1 < histories.length) {
+        return index + 1
+      } else if (action === 'redo' && index - 1 >= 0) {
+        return index - 1
+      } else {
+        return index
       }
     }
-  }
 
-  // やり直し
-  const redo = () => {
-    for (let i = 0, len = corodLog.length; i < len; i++) {
-      if (corodLog[i].current && i - 1 >= 0) {
-        corodLog[i] = { ...corodLog[i], current: false }
-        // 座標更新処理
-        dragableBox.style.left = corodLog[i - 1].left
-        dragableBox.style.right = corodLog[i - 1].right
-        corodLog[i - 1] = { ...corodLog[i - 1], current: true }
-        break
-      }
-    }
+    const index = findAction()
+
+    // 座標更新処理
+    draggableBox.style.left = histories[index].left
+    draggableBox.style.top = histories[index].top
+    histories[index] = { ...histories[index], current: true }
   }
 
   // [Ctrl + Z]でもとに戻す
   if (event.ctrlKey && event.key === 'z') {
-    undo()
+    historyAction('undo')
     // [Ctrl + Y]でやり直し
   } else if (event.ctrlKey && event.key === 'y') {
-    redo()
+    historyAction('redo')
   }
 }
 
-// イベント追加
+// イベントリスナー追加
 window.addEventListener('keydown', onKeyDown)
